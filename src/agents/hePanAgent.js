@@ -233,10 +233,21 @@ function runHePanAgent(personA, personB) {
     scores: {
       heScore,
       chongScore,
-      // 综合评分：0-100，前端直接用这个
-      overall: Math.max(10, Math.min(100,
-        Math.round(50 + (heScore - chongScore) * 0.8 + (tianDiShuangHe ? 15 : 0))
-      )),
+      // 多维度评分（每个维度都能高分，没有"总分"让人难过）
+      dimensions: {
+        // 默契度：基于合的数量
+        sync: Math.min(100, 50 + hes.filter(h => h.type === 'tianGanHe' || h.type === 'diZhiHe').length * 15 + (tianDiShuangHe ? 25 : 0)),
+        // 吸引力：基于合+半合
+        attraction: Math.min(100, 50 + hes.length * 12 + (tianDiShuangHe ? 20 : 0)),
+        // 稳定性：反向计算冲的数量，冲少=高分
+        stability: Math.max(30, 100 - chongs.length * 15),
+        // 互补性：基于日主生克关系
+        complement: dayMasterRelation.type === 'a_sheng_b' || dayMasterRelation.type === 'b_sheng_a' ? 90 :
+                    dayMasterRelation.type === 'same' ? 75 :
+                    dayMasterRelation.type === 'a_ke_b' || dayMasterRelation.type === 'b_ke_a' ? 60 : 70,
+        // 成长潜力：基于sameElements + 半合
+        growth: Math.min(100, 50 + sameElements.length * 10 + hes.filter(h => h.type === 'banHe').length * 15),
+      },
     },
     relationshipMode,
   };
