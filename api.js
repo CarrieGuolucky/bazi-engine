@@ -15,6 +15,7 @@ const { runLiuNianAgent } = require('./src/agents/liuNianAgent');
 const { runScenarioAgent } = require('./src/agents/scenarioAgent');
 const { runHePanAgent, buildHePanWriterPrompt } = require('./src/agents/hePanAgent');
 const { orchestrate } = require('./src/orchestrator');
+const { runDynamicEngine } = require('./src/dynamicEngine');
 
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.CLAUDE_API_KEY;
@@ -59,12 +60,20 @@ const server = http.createServer(async (req, res) => {
   }
 
   // 排盘（不需要API key，纯本地计算）
+  // 返回完整分析：四柱+身强弱+格局+神煞+墓库+刑破害+十二长生+空亡+动态引擎
   if (url === '/api/chart' && req.method === 'POST') {
     const body = await parseBody(req);
     try {
       const bazi = runBaziAgent(body);
       const liuNian = runLiuNianAgent(bazi);
-      return json(res, { chart: bazi, timeline: liuNian });
+      const startYear = body.startYear || new Date().getFullYear();
+      const endYear = body.endYear || startYear + 20;
+      const dynamic = runDynamicEngine(bazi, startYear, endYear);
+      return json(res, {
+        chart: bazi,
+        timeline: liuNian,
+        dynamic,
+      });
     } catch (e) {
       return json(res, { error: e.message }, 400);
     }

@@ -6,6 +6,12 @@
 
 const { Solar, Lunar } = require('lunar-javascript');
 const { analyzeStrength } = require('../strength');
+const { analyzeShenSha } = require('../shensha');
+const { analyzeGeJu } = require('../geju');
+const { analyzeMuKu } = require('../muku');
+const { analyzeXingPoHai } = require('../xingpohai');
+const { analyzeShierChangSheng } = require('../shierChangSheng');
+const { analyzeKongWang } = require('../kongwang');
 
 /**
  * 真太阳时修正
@@ -167,6 +173,24 @@ function runBaziAgent(input) {
   const strength = strengthResult.strength;
   const xiyong = strengthResult.xiyong;
 
+  // 12. 神煞分析
+  const shenSha = analyzeShenSha(fourPillars);
+
+  // 13. 格局分析
+  const geJu = analyzeGeJu(fourPillars, strengthResult);
+
+  // 14. 墓库分析
+  const muKu = analyzeMuKu(fourPillars, dayMasterElement, daYun);
+
+  // 15. 刑破害分析
+  const xingPoHai = analyzeXingPoHai(fourPillars);
+
+  // 16. 十二长生
+  const changSheng = analyzeShierChangSheng(fourPillars, dayMaster);
+
+  // 17. 空亡深度解读
+  const kongWangAnalysis = analyzeKongWang(fourPillars, dayMaster);
+
   return {
     input: {
       original: `${year}-${month}-${day} ${hour}:${minute}`,
@@ -185,6 +209,12 @@ function runBaziAgent(input) {
     nayin,
     extras,
     daYun,
+    shenSha,
+    geJu,
+    muKu,
+    xingPoHai,
+    changSheng,
+    kongWangAnalysis,
     strengthAnalysis: strengthResult,
     solarDate: `${solarYear}-${String(solarMonth).padStart(2, '0')}-${String(solarDay).padStart(2, '0')}`,
     lunarDate: lunar.toString(),
