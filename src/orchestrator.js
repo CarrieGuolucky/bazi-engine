@@ -15,6 +15,7 @@ const { runLiuNianAgent } = require('./agents/liuNianAgent');
 const { runScenarioAgent } = require('./agents/scenarioAgent');
 const { runWriterAgent } = require('./agents/writerAgent');
 const { runReflectionAgent, MAX_ITERATIONS } = require('./agents/reflectionAgent');
+const { runDynamicEngine } = require('../dynamicEngine');
 
 /**
  * 主编排函数
@@ -57,6 +58,10 @@ async function orchestrate(userInput, apiKey, options = {}) {
   // Agent 3: 场景匹配（纯本地匹配）
   const scenarioResult = runScenarioAgent({ scenarioId, userContext, baziData: baziResult });
   log('✅ 场景匹配Agent完成:', scenarioResult.scenario.title.zh || scenarioResult.scenario.title.en);
+
+  // Agent 4: 动态引擎（逐年交叉分析）
+  const dynamicResult = runDynamicEngine(baziResult, new Date().getFullYear(), new Date().getFullYear() + 20);
+  log('✅ 动态引擎完成:', dynamicResult.yearAnalysis.length, '年分析，最佳年份:', dynamicResult.bestYears.map(y => y.year).join(','));
 
   // ====== Step 3: Writer Agent 生成报告 ======
   log('✍️  Writer Agent 生成报告...');
@@ -114,15 +119,8 @@ async function orchestrate(userInput, apiKey, options = {}) {
 
   return {
     report: finalReport,
-    chart: {
-      fourPillars: baziResult.fourPillars,
-      dayMaster: baziResult.dayMaster,
-      dayMasterElement: baziResult.dayMasterElement,
-      strength: baziResult.strength,
-      xiyong: baziResult.xiyong,
-      wuxing: baziResult.wuxing,
-      daYun: baziResult.daYun,
-    },
+    chart: baziResult,
+    dynamic: dynamicResult,
     timeline: {
       currentDaYun: liuNianResult.currentDaYun,
       nextDaYun: liuNianResult.nextDaYun,

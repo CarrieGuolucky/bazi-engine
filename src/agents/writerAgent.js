@@ -58,6 +58,24 @@ Use markdown tables. Bold **key points**.`;
 出生信息：${baziResult.input.original}，${baziResult.input.birthCity}，${baziResult.input.gender === 'female' ? '女' : '男'}
 真太阳时：${baziResult.input.trueSolarTime}
 
+## 格局分析
+${baziResult.geJu ? baziResult.geJu.summary : '未分析'}
+
+## 神煞
+${baziResult.shenSha ? baziResult.shenSha.summary + '\n' + baziResult.shenSha.details.join('\n') : '未分析'}
+
+## 墓库
+${baziResult.muKu ? baziResult.muKu.summary : '未分析'}
+
+## 刑破害
+${baziResult.xingPoHai ? baziResult.xingPoHai.summary : '无'}
+
+## 十二长生
+${baziResult.changSheng ? baziResult.changSheng.summary : '未分析'}
+
+## 空亡
+${baziResult.kongWangAnalysis ? baziResult.kongWangAnalysis.summary : '未分析'}
+
 ## 大运流年分析
 
 当前大运：${liuNianResult.currentDaYun.ganZhi}（${liuNianResult.currentDaYun.period}，${liuNianResult.currentDaYun.age}）
