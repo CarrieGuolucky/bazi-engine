@@ -230,7 +230,14 @@ function runHePanAgent(personA, personB) {
     hes,
     chongs: conflictPatterns,
     sameElements,
-    scores: { heScore, chongScore },
+    scores: {
+      heScore,
+      chongScore,
+      // 综合评分：0-100，前端直接用这个
+      overall: Math.max(10, Math.min(100,
+        Math.round(50 + (heScore - chongScore) * 0.8 + (tianDiShuangHe ? 15 : 0))
+      )),
+    },
     relationshipMode,
   };
 }
