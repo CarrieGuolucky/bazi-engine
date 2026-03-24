@@ -15,7 +15,7 @@ const { runLiuNianAgent } = require('./agents/liuNianAgent');
 const { runScenarioAgent } = require('./agents/scenarioAgent');
 const { runWriterAgent } = require('./agents/writerAgent');
 const { runReflectionAgent, MAX_ITERATIONS } = require('./agents/reflectionAgent');
-const { runDynamicEngine } = require('../dynamicEngine');
+const { runDynamicEngine } = require('./dynamicEngine');
 
 /**
  * 主编排函数
