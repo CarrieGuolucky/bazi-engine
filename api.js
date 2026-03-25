@@ -219,10 +219,45 @@ const server = http.createServer(async (req, res) => {
       const startYear = body.startYear || new Date().getFullYear();
       const endYear = body.endYear || startYear + 20;
       const dynamic = runDynamicEngine(bazi, startYear, endYear);
+      // WOW moment: 精准命中用户性格的第一句话
+      const geJuName = bazi.geJu ? bazi.geJu.name : '';
+      const dmElement = bazi.dayMasterElement;
+      const strength = bazi.strength;
+      const shenShaNames = bazi.shenSha ? bazi.shenSha.吉神.map(s => s.name) : [];
+      const kuCount = bazi.muKu ? bazi.muKu.kus.length : 0;
+      const currentYear = dynamic.yearAnalysis[0] || {};
+
+      const WOW_MAP = {
+        '正官格': { zh: '你是不是经常替别人操心，自己反而最累？别人觉得你靠谱到不行，但你内心其实很需要被认可。', en: "People always count on you, but who do YOU lean on? You're the rock everyone relies on — but rocks need support too." },
+        '七杀格': { zh: '你是不是特别受不了低效率的人？别人觉得你强势，但其实你只是标准高、不想浪费时间。', en: "You can't stand inefficiency, can you? People think you're intense — but you just refuse to waste time on mediocrity." },
+        '正印格': { zh: '你是不是学什么都很快，但经常觉得"还没准备好"？你的准备其实已经超过99%的人了。', en: "You pick things up faster than anyone, but always feel 'not ready yet.' News flash: you're more prepared than 99% of people." },
+        '偏印格': { zh: '你的想法是不是经常跟别人不一样，有时候觉得没人理解你？那是因为你想得比别人深三层。', en: "Your mind works differently from everyone else's. That's not a bug — you think three layers deeper than most people." },
+        '食神格': { zh: '你是不是特别追求生活品质，做事一定要做到自己满意？你不是挑剔，是有标准。', en: "You refuse to settle for mediocre, whether it's food, work, or relationships. That's not picky — that's having standards." },
+        '伤官格': { zh: '你是不是看到不合理的事就忍不住想说？别人觉得你嘴毒，但你只是不愿意装傻。', en: "You see what's broken and can't help pointing it out. People call it blunt — you call it honest." },
+        '正财格': { zh: '你是不是做事特别稳，不喜欢冒险？你的"保守"其实是聪明——你知道稳步积累比赌博靠谱。', en: "You play the long game while everyone else is gambling. Your 'boring stability' is actually the smartest strategy." },
+        '偏财格': { zh: '你是不是朋友特别多，走到哪都能认识新朋友？你天生有一种让人想靠近的磁场。', en: "You walk into a room and somehow leave with three new friends. Your social magnetism is your superpower." },
+        '建禄格': { zh: '你是不是从小就比较独立，不太愿意求人？你的底气是自己给的，不靠任何人。', en: "You've been self-reliant since day one. Your confidence comes from within — you don't need anyone's permission." },
+        '羊刃格': { zh: '你是不是特别不服输，越难的事越想挑战？别人退缩的时候就是你上场的时候。', en: "The harder the challenge, the more alive you feel. Where others retreat, you charge forward." },
+      };
+      const wowBase = WOW_MAP[geJuName] || { zh: '你的命盘很有意思，让我仔细看看。', en: "Your chart is fascinating — let me take a closer look." };
+
+      // 叠加个性化细节
+      let wowExtra_zh = '';
+      let wowExtra_en = '';
+      if (kuCount >= 3) { wowExtra_zh = `而且你有${kuCount}个财库，天生存钱体质！`; wowExtra_en = ` Plus, you have ${kuCount} wealth vaults — you're a natural saver!`; }
+      if (shenShaNames.filter(n => n === '太极贵人').length >= 2) { wowExtra_zh += '太极贵人连hit，学什么都比别人快。'; wowExtra_en += " Your Wisdom Stars are off the charts — you learn faster than most."; }
+      if (currentYear.stars === '★★★★★') { wowExtra_zh += `今年${currentYear.ganZhi}是你的大吉年！`; wowExtra_en += ` This year is your BEST year!`; }
+
+      const greeting = {
+        zh: wowBase.zh + wowExtra_zh,
+        en: wowBase.en + wowExtra_en,
+      };
+
       return json(res, {
         chart: bazi,
         timeline: liuNian,
         dynamic,
+        greeting,
       });
     } catch (e) {
       return json(res, { error: e.message }, 400);
