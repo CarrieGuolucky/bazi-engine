@@ -247,7 +247,11 @@ const server = http.createServer(async (req, res) => {
     const body = await parseBody(req);
     try {
       const { personA, personB, scenarioId, userContext } = body;
+      // 请求日志：看前端传了什么
+      console.log('[HEPAN] personA:', JSON.stringify(personA));
+      console.log('[HEPAN] personB:', JSON.stringify(personB));
       const hePanResult = runHePanAgent(personA, personB);
+      console.log('[HEPAN] 天地双合:', hePanResult.tianDiShuangHe, '合数:', hePanResult.hes.length, '冲数:', hePanResult.chongs.length);
 
       // 调Claude生成解读
       const { systemPrompt, userPrompt } = buildHePanWriterPrompt(hePanResult, scenarioId || 'is-this-right', userContext || '');
