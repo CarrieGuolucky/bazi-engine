@@ -210,6 +210,119 @@ function runHePanAgent(personA, personB) {
     return { ...c, solution };
   });
 
+  // ===== 新增：合盘升级分析 =====
+
+  // 9. 神煞交互——一方的贵人星落在对方的关键位置
+  const shenShaInteraction = [];
+  const ssA = baziA.shenSha ? baziA.shenSha.吉神 : [];
+  const ssB = baziB.shenSha ? baziB.shenSha.吉神 : [];
+  // A的天乙贵人是否在B的地支位置上
+  if (ssA.some(s => s.name === '天乙贵人')) {
+    shenShaInteraction.push({ type: 'A助B', desc: 'A命带天乙贵人，在关系中能成为B的贵人，关键时刻帮B化解困难' });
+  }
+  if (ssB.some(s => s.name === '天乙贵人')) {
+    shenShaInteraction.push({ type: 'B助A', desc: 'B命带天乙贵人，在关系中能成为A的贵人，带来好运和机遇' });
+  }
+  if (ssA.some(s => s.name === '天喜') || ssB.some(s => s.name === '天喜')) {
+    shenShaInteraction.push({ type: '喜庆', desc: '有天喜星加持，在一起容易有喜事（结婚、添丁、升职）' });
+  }
+  if (ssA.some(s => s.name === '红鸾') || ssB.some(s => s.name === '红鸾')) {
+    shenShaInteraction.push({ type: '正缘', desc: '红鸾星出现，说明这段缘分是正缘，不是过客' });
+  }
+  // 双方都有华盖
+  if (ssA.some(s => s.name === '华盖') && ssB.some(s => s.name === '华盖')) {
+    shenShaInteraction.push({ type: '灵魂共鸣', desc: '双方都有华盖，精神世界特别契合，能理解对方的"孤独"' });
+  }
+
+  // 10. 墓库互开——一方的地支能冲开对方的墓库
+  const muKuInteraction = [];
+  const MUKU_CHONG = { '辰': '戌', '戌': '辰', '丑': '未', '未': '丑' };
+  const MUKU_KU = { '辰': '水库', '戌': '火库', '丑': '金库', '未': '木库' };
+  const getKuMeaning = (ku, dayElement) => {
+    const kuElement = { '水库': '水', '火库': '火', '金库': '金', '木库': '木' }[ku];
+    if (!kuElement) return ku;
+    if (WUXING_KE[dayElement] === kuElement) return '财库';
+    if (WUXING_KE[kuElement] === dayElement) return '官库';
+    if (WUXING_SHENG[kuElement] === dayElement) return '印库';
+    if (WUXING_SHENG[dayElement] === kuElement) return '食伤库';
+    return ku;
+  };
+
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      // A的地支冲B的墓库
+      if (MUKU_KU[zhisB[j]] && MUKU_CHONG[zhisB[j]] === zhisA[i]) {
+        const kuName = getKuMeaning(MUKU_KU[zhisB[j]], baziB.dayMasterElement);
+        muKuInteraction.push({
+          desc: `A的${POS_NAMES[i]}支${zhisA[i]}冲开B的${POS_NAMES[j]}支${zhisB[j]}（${kuName}）`,
+          who: 'A帮B',
+          kuType: kuName,
+        });
+      }
+      // B的地支冲A的墓库
+      if (MUKU_KU[zhisA[i]] && MUKU_CHONG[zhisA[i]] === zhisB[j]) {
+        const kuName = getKuMeaning(MUKU_KU[zhisA[i]], baziA.dayMasterElement);
+        muKuInteraction.push({
+          desc: `B的${POS_NAMES[j]}支${zhisB[j]}冲开A的${POS_NAMES[i]}支${zhisA[i]}（${kuName}）`,
+          who: 'B帮A',
+          kuType: kuName,
+        });
+      }
+    }
+  }
+
+  // 11. 格局配合度
+  const geJuA = baziA.geJu ? baziA.geJu.name : '';
+  const geJuB = baziB.geJu ? baziB.geJu.name : '';
+  let geJuMatch = { level: 'neutral', desc: '' };
+  // 互补型组合
+  if ((geJuA.includes('正官') && geJuB.includes('印')) || (geJuB.includes('正官') && geJuA.includes('印'))) {
+    geJuMatch = { level: 'excellent', desc: '管理型+智慧型的黄金组合，一个做决策一个出谋划策' };
+  } else if ((geJuA.includes('食神') && geJuB.includes('财')) || (geJuB.includes('食神') && geJuA.includes('财'))) {
+    geJuMatch = { level: 'excellent', desc: '创意型+实干型的组合，一个想点子一个变现' };
+  } else if ((geJuA.includes('七杀') && geJuB.includes('印')) || (geJuB.includes('七杀') && geJuA.includes('印'))) {
+    geJuMatch = { level: 'excellent', desc: '将帅型+军师型的组合，一个冲锋一个稳后方' };
+  } else if (geJuA.includes('正官') && geJuB.includes('正官')) {
+    geJuMatch = { level: 'good', desc: '双管理型，都有责任心但可能争主导权，需要明确分工' };
+  } else if ((geJuA.includes('伤官') && geJuB.includes('正官')) || (geJuB.includes('伤官') && geJuA.includes('正官'))) {
+    geJuMatch = { level: 'tension', desc: '叛逆型+规矩型的碰撞，一个想打破规则一个想维护秩序，需要学会欣赏差异' };
+  } else {
+    geJuMatch = { level: 'good', desc: `${geJuA || '未知格局'}与${geJuB || '未知格局'}的组合，各有特色互相学习` };
+  }
+
+  // 12. 刑破害交叉检测
+  const { detectXingPoHaiTrigger } = require('../xingpohai');
+  const crossXPH = [];
+  for (const zhi of zhisA) {
+    const triggers = detectXingPoHaiTrigger(zhi, baziB.fourPillars);
+    triggers.forEach(t => crossXPH.push({ from: 'A→B', ...t }));
+  }
+  for (const zhi of zhisB) {
+    const triggers = detectXingPoHaiTrigger(zhi, baziA.fourPillars);
+    triggers.forEach(t => crossXPH.push({ from: 'B→A', ...t }));
+  }
+
+  // 13. 最佳共同年份（两人dynamic都高分的年份）
+  const { runDynamicEngine } = require('../dynamicEngine');
+  const dynA = runDynamicEngine(baziA, 2026, 2036);
+  const dynB = runDynamicEngine(baziB, 2026, 2036);
+  const bestSharedYears = [];
+  for (const yA of dynA.yearAnalysis) {
+    const yB = dynB.yearAnalysis.find(y => y.year === yA.year);
+    if (yB) {
+      const avgScore = Math.round((yA.score + yB.score) / 2);
+      bestSharedYears.push({
+        year: yA.year,
+        ganZhi: yA.ganZhi,
+        scoreA: yA.score,
+        scoreB: yB.score,
+        avgScore,
+        label: avgScore >= 75 ? '共同好年 ⭐' : avgScore >= 55 ? '平稳年' : '需注意',
+      });
+    }
+  }
+  bestSharedYears.sort((a, b) => b.avgScore - a.avgScore);
+
   return {
     personA: {
       name: personA.name || 'A',
@@ -217,6 +330,8 @@ function runHePanAgent(personA, personB) {
       dayMaster: baziA.dayMaster,
       dayMasterElement: baziA.dayMasterElement,
       strength: baziA.strength,
+      geJu: baziA.geJu ? baziA.geJu.displayName : '',
+      shenShaCount: { good: ssA.length, bad: baziA.shenSha ? baziA.shenSha.凶煞.length : 0 },
     },
     personB: {
       name: personB.name || 'B',
@@ -224,6 +339,8 @@ function runHePanAgent(personA, personB) {
       dayMaster: baziB.dayMaster,
       dayMasterElement: baziB.dayMasterElement,
       strength: baziB.strength,
+      geJu: baziB.geJu ? baziB.geJu.displayName : '',
+      shenShaCount: { good: ssB.length, bad: baziB.shenSha ? baziB.shenSha.凶煞.length : 0 },
     },
     dayMasterRelation,
     tianDiShuangHe,
@@ -250,6 +367,12 @@ function runHePanAgent(personA, personB) {
       },
     },
     relationshipMode,
+    // 合盘升级数据
+    shenShaInteraction,
+    muKuInteraction,
+    geJuMatch,
+    crossXPH: crossXPH.slice(0, 10), // 最多显示10条
+    bestSharedYears: bestSharedYears.slice(0, 5), // top 5共同好年
   };
 }
 
@@ -329,7 +452,7 @@ const HEPAN_SCENARIOS = {
  */
 function buildHePanWriterPrompt(hePanResult, scenarioId, userContext = '', lang = 'zh') {
   const scenario = HEPAN_SCENARIOS[scenarioId] || HEPAN_SCENARIOS['is-this-right'];
-  const { personA, personB, dayMasterRelation, tianDiShuangHe, hes, chongs, sameElements, relationshipMode } = hePanResult;
+  const { personA, personB, dayMasterRelation, tianDiShuangHe, hes, chongs, sameElements, relationshipMode, shenShaInteraction, muKuInteraction, geJuMatch, bestSharedYears } = hePanResult;
 
   const systemPrompt = `你是一位感情关系AI顾问，融合东方命理和现代关系心理学。
 
@@ -362,6 +485,19 @@ ${tianDiShuangHe ? '\n★ 天地双合！极稀有的深度绑定。' : ''}
 
 ## 冲的力量（摩擦点）
 ${chongs.length > 0 ? chongs.map(c => `- ${c.detail}（${c.posA}×${c.posB}）— ${c.meaning}\n  解法：${c.solution}`).join('\n') : '没有明显的冲，关系相对平稳'}
+
+## 神煞交互（贵人缘分）
+${shenShaInteraction && shenShaInteraction.length > 0 ? shenShaInteraction.map(s => `- ${s.desc}`).join('\n') : '无特殊神煞交互'}
+
+## 墓库互开（互相激活对方的潜力）
+${muKuInteraction && muKuInteraction.length > 0 ? muKuInteraction.map(m => `- ${m.desc}`).join('\n') : '无墓库互开关系'}
+
+## 格局配合度
+${geJuMatch ? `${geJuMatch.desc}（配合等级：${geJuMatch.level}）` : '未分析'}
+A格局：${personA.geJu || '未知'} | B格局：${personB.geJu || '未知'}
+
+## 最佳共同年份
+${bestSharedYears && bestSharedYears.length > 0 ? bestSharedYears.filter(y => y.avgScore >= 55).map(y => `- ${y.year}年${y.ganZhi}：A方${y.scoreA}分 + B方${y.scoreB}分 = 平均${y.avgScore}分 ${y.label}`).join('\n') : '未计算'}
 
 ## 相同元素（共鸣点）
 ${sameElements.length > 0 ? sameElements.map(s => `- ${s.position} ${s.value} — ${s.meaning}`).join('\n') : '没有相同元素'}
