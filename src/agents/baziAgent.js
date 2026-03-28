@@ -12,6 +12,7 @@ const { analyzeMuKu } = require('../muku');
 const { analyzeXingPoHai } = require('../xingpohai');
 const { analyzeShierChangSheng } = require('../shierChangSheng');
 const { analyzeKongWang } = require('../kongwang');
+const { analyzeSpouse } = require('../spouse');
 
 /**
  * 真太阳时修正
@@ -191,6 +192,9 @@ function runBaziAgent(input) {
   // 17. 空亡深度解读
   const kongWangAnalysis = analyzeKongWang(fourPillars, dayMaster);
 
+  // 18. 配偶星分析
+  const spouse = analyzeSpouse(fourPillars, dayMaster, gender);
+
   return {
     input: {
       original: `${year}-${month}-${day} ${hour}:${minute}`,
@@ -215,6 +219,7 @@ function runBaziAgent(input) {
     xingPoHai,
     changSheng,
     kongWangAnalysis,
+    spouse,
     strengthAnalysis: strengthResult,
     solarDate: `${solarYear}-${String(solarMonth).padStart(2, '0')}-${String(solarDay).padStart(2, '0')}`,
     lunarDate: lunar.toString(),
