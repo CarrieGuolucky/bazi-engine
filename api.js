@@ -60,6 +60,19 @@ const server = http.createServer(async (req, res) => {
     return json(res, { status: 'ok', hasApiKey: !!API_KEY });
   }
 
+  // 财运曲线
+  if (url === '/api/wealth' && req.method === 'POST') {
+    const body = await parseBody(req);
+    try {
+      const { generateWealthCurve } = require('./src/wealthCurve');
+      const bazi = runBaziAgent(body);
+      const wealth = generateWealthCurve(bazi);
+      return json(res, wealth);
+    } catch (e) {
+      return json(res, { error: e.message }, 400);
+    }
+  }
+
   // 流月分析
   if (url === '/api/monthly' && req.method === 'POST') {
     const body = await parseBody(req);
