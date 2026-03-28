@@ -60,6 +60,20 @@ const server = http.createServer(async (req, res) => {
     return json(res, { status: 'ok', hasApiKey: !!API_KEY });
   }
 
+  // 流月分析
+  if (url === '/api/monthly' && req.method === 'POST') {
+    const body = await parseBody(req);
+    try {
+      const { analyzeMonthly } = require('./src/monthlyEngine');
+      const bazi = runBaziAgent(body);
+      const year = body.targetYear || new Date().getFullYear();
+      const monthly = analyzeMonthly(bazi.dayMaster, bazi.xiyong, year, bazi.fourPillars);
+      return json(res, monthly);
+    } catch (e) {
+      return json(res, { error: e.message }, 400);
+    }
+  }
+
   // 稀有度计算（大样本模拟，耗时几秒）
   if (url === '/api/rarity' && req.method === 'POST') {
     const body = await parseBody(req);
