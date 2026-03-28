@@ -6,6 +6,38 @@
  */
 
 const SCENARIOS = {
+  // 🌟 通用场景（chat / decision tool用）
+  'general': {
+    title: { en: 'Life Guidance', zh: '人生导航' },
+    emotionalHook: {
+      en: "You have a question on your mind. Let's see what your chart says about it.",
+      zh: '你心里有个问题想搞清楚。我们来看看你的命盘怎么说。',
+    },
+    focusAreas: ['career_timing', 'financial_outlook', 'relationship', 'decision_window'],
+    keyQuestions: [
+      '用户的核心问题是什么，结合八字给出具体建议',
+      '当前大运流年的整体运势',
+      '未来1-3年的最佳行动窗口',
+      '根据格局给出适合的方向',
+    ],
+    actionFramework: 'timing_based',
+  },
+  'decision': {
+    title: { en: 'Decision Analysis', zh: '决策分析' },
+    emotionalHook: {
+      en: "Big decisions deserve more than a coin flip. Let's see what your chart says about the timing.",
+      zh: '重大决定不能靠抛硬币。我们来看看你的命盘对这个时机怎么说。',
+    },
+    focusAreas: ['career_timing', 'financial_outlook', 'decision_window'],
+    keyQuestions: [
+      '用户面临的具体决策是什么',
+      '当前流年是否支持重大变动',
+      '格局类型适合哪个选项',
+      '最佳决策时间窗口',
+      '风险点和化解方案',
+    ],
+    actionFramework: 'decision_based',
+  },
   // 🔥 紧急决定
   'job-offer': {
     title: { en: 'Should You Take This Offer?', zh: '这个offer该不该接？' },
