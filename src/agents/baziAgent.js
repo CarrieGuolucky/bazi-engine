@@ -13,6 +13,8 @@ const { analyzeXingPoHai } = require('../xingpohai');
 const { analyzeShierChangSheng } = require('../shierChangSheng');
 const { analyzeKongWang } = require('../kongwang');
 const { analyzeSpouse } = require('../spouse');
+const { analyzeHealth } = require('../health');
+const { analyzeLucky } = require('../lucky');
 
 /**
  * 真太阳时修正
@@ -195,6 +197,12 @@ function runBaziAgent(input) {
   // 18. 配偶星分析
   const spouse = analyzeSpouse(fourPillars, dayMaster, gender);
 
+  // 19. 健康预警
+  const health = analyzeHealth(strengthResult, dayMasterElement);
+
+  // 20. 幸运颜色/数字/方位
+  const lucky = analyzeLucky(xiyong);
+
   return {
     input: {
       original: `${year}-${month}-${day} ${hour}:${minute}`,
@@ -220,6 +228,8 @@ function runBaziAgent(input) {
     changSheng,
     kongWangAnalysis,
     spouse,
+    health,
+    lucky,
     strengthAnalysis: strengthResult,
     solarDate: `${solarYear}-${String(solarMonth).padStart(2, '0')}-${String(solarDay).padStart(2, '0')}`,
     lunarDate: lunar.toString(),
