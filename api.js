@@ -16,6 +16,7 @@ const { runScenarioAgent } = require('./src/agents/scenarioAgent');
 const { runHePanAgent, buildHePanWriterPrompt } = require('./src/agents/hePanAgent');
 const { orchestrate } = require('./src/orchestrator');
 const { runDynamicEngine } = require('./src/dynamicEngine');
+const { calculateChartScore, calculateRarity, calculatePairRarity } = require('./src/rarity');
 
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.CLAUDE_API_KEY;
@@ -57,6 +58,35 @@ const server = http.createServer(async (req, res) => {
   // 健康检查
   if (url === '/api/health') {
     return json(res, { status: 'ok', hasApiKey: !!API_KEY });
+  }
+
+  // 稀有度计算（大样本模拟，耗时几秒）
+  if (url === '/api/rarity' && req.method === 'POST') {
+    const body = await parseBody(req);
+    try {
+      const bazi = runBaziAgent(body);
+      const chartScore = calculateChartScore(bazi);
+      const sampleSize = body.sampleSize || 10000;
+      const rarity = calculateRarity(chartScore, sampleSize);
+      return json(res, rarity);
+    } catch (e) {
+      return json(res, { error: e.message }, 400);
+    }
+  }
+
+  // 合盘稀有度
+  if (url === '/api/rarity/pair' && req.method === 'POST') {
+    const body = await parseBody(req);
+    try {
+      const { personA, personB } = body;
+      const { runHePanAgent: hepan } = require('./src/agents/hePanAgent');
+      const hepanResult = hepan(personA, personB);
+      const sampleSize = body.sampleSize || 5000;
+      const rarity = calculatePairRarity(hepanResult, sampleSize);
+      return json(res, { ...rarity, tianDiShuangHe: hepanResult.tianDiShuangHe });
+    } catch (e) {
+      return json(res, { error: e.message }, 400);
+    }
   }
 
   // 每日运势（不需要API key，纯本地计算）
@@ -219,6 +249,9 @@ const server = http.createServer(async (req, res) => {
       const startYear = body.startYear || new Date().getFullYear();
       const endYear = body.endYear || startYear + 20;
       const dynamic = runDynamicEngine(bazi, startYear, endYear);
+      // 稀有度计算（快速版，不跑大样本）
+      const chartScore = calculateChartScore(bazi);
+
       // WOW moment: 精准命中用户性格的第一句话
       const geJuName = bazi.geJu ? bazi.geJu.name : '';
       const dmElement = bazi.dayMasterElement;
@@ -258,6 +291,7 @@ const server = http.createServer(async (req, res) => {
         timeline: liuNian,
         dynamic,
         greeting,
+        rarity: { score: chartScore },
       });
     } catch (e) {
       return json(res, { error: e.message }, 400);
